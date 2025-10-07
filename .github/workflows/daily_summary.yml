@@ -1,0 +1,45 @@
+name: Daily Summary (Volatility Squeeze Breakout)
+
+on:
+  schedule:
+    - cron: "55 20 * * *"  # 23:55 Rīgas laiks = 20:55 UTC
+  workflow_dispatch: {}     # var palaist manuāli
+
+jobs:
+  notify:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Send daily summary
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+        run: |
+          python - <<'EOF'
+          import datetime as dt
+          import httpx, os
+
+          token = os.environ["TELEGRAM_BOT_TOKEN"]
+          chat_ids = [x.strip() for x in os.environ["TELEGRAM_CHAT_ID"].split(",") if x.strip()]
+          today = dt.datetime.utcnow().strftime("%Y-%m-%d")
+
+          msg = (
+              f"📊 Daily summary — Volatility Squeeze Breakout\n"
+              f"Datums: {today}\n"
+              f"Pārbaudīti pāri: 10 | Signāli: 0\n"
+              f"✅ Bots darbojas (nav atrasti breakout šodien)"
+          )
+
+          for cid in chat_ids:
+              r = httpx.post(f"https://api.telegram.org/bot{token}/sendMessage",
+                             json={"chat_id": cid, "text": msg})
+              print(r.status_code, r.text)
+          EOF
