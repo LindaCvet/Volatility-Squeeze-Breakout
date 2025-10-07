@@ -18,8 +18,9 @@ jobs:
   run:
     runs-on: ubuntu-latest
     timeout-minutes: 10
+
     steps:
-      - name: Checkout
+      - name: Checkout repo
         uses: actions/checkout@v4
 
       - name: Setup Python
@@ -35,10 +36,15 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-pip-
 
-      - name: Install deps
+      - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
+
+      - name: Check Python version
+        run: |
+          which python
+          python --version
 
       - name: Run TEST (Telegram smoke)
         if: ${{ inputs.mode == 'test' }}
@@ -55,4 +61,4 @@ jobs:
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
           COINGECKO_API_KEY: ${{ secrets.COINGECKO_API_KEY }}
         run: |
-          pyt
+          python main.py
