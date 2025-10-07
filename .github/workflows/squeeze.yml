@@ -2,8 +2,17 @@ name: Volatility Squeeze Breakout (M15, */5)
 
 on:
   schedule:
-    - cron: "*/5 * * * *"  # GitHub cron = UTC; 5 min
-  workflow_dispatch: {}
+    - cron: "*/5 * * * *"  # reālais skrējiens ik 5 min (UTC)
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: "Run mode (test = sūta testa ziņu Telegram)"
+        required: true
+        default: "run"
+        type: choice
+        options:
+          - run
+          - test
 
 jobs:
   run:
@@ -31,10 +40,19 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
-      - name: Run bot
+      - name: Run TEST (Telegram smoke)
+        if: ${{ inputs.mode == 'test' }}
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+        run: |
+          python -m src.selftest
+
+      - name: Run bot (production)
+        if: ${{ inputs.mode == 'run' }}
         env:
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
           COINGECKO_API_KEY: ${{ secrets.COINGECKO_API_KEY }}
         run: |
-          python main.py
+          pyt
